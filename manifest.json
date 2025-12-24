@@ -1,0 +1,19 @@
+{
+  "name": "Sanctus",
+  "short_name": "Sanctus",
+  "description": "Daily prayers, readings, and liturgical calendar.",
+  "start_url": "./SanctusWithicon.html",
+  "scope": "./",
+  "id": "./SanctusWithicon.html",
+  "display": "standalone",
+  "background_color": "#fdfbf7",
+  "theme_color": "#d4af37",
+  "icons": [
+    {
+      "src": "icons/app-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

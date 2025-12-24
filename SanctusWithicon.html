@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <title>Sanctus</title>
+    <meta name="theme-color" content="#d4af37">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Sanctus">
+    <meta name="mobile-web-app-capable" content="yes">
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" type="image/svg+xml" href="icons/app-icon.svg">
+    <style>
+        :root {
+            --primary: #2c3e50;
+            --accent: #c0392b;
+            --gold: #d4af37; /* Changes dynamically with season */
+            --bg: #fdfbf7;
+            --card-bg: #ffffff;
+            --shadow: 0 4px 6px rgba(0,0,0,0.1);
+            --text-muted: #666;
+        }
+
+        body {
+            font-family: 'Georgia', 'Times New Roman', serif;
+            background-color: var(--bg);
+            color: var(--primary);
+            margin: 0;
+            padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        header { 
+            text-align: center; 
+            padding: 3rem 0 2rem 0; 
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* --- ICON IMAGE STYLING --- */
+        .seasonal-icon {
+            width: 110px;
+            height: 110px;
+            border-radius: 50%;
+            border: 4px solid var(--gold);
+            object-fit: cover; /* Ensures the image fills the circle */
+            box-shadow: 0 6px 15px rgba(0,0,0,0.15);
+            margin-bottom: 1.5rem;
+            transition: border-color 0.5s ease;
+            background-color: #f0f0f0; /* Fallback background */
+        }
+
+        h1 {
+            font-size: 3rem; margin: 0; letter-spacing: 5px;
+            text-transform: uppercase; color: var(--gold);
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
+        }
+
+        /* --- LAYOUT WRAPPER --- */
+        .layout-wrapper {
+            width: 95%;
+            max-width: 1600px;
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+            padding-bottom: 6rem;
+            align-items: center;
+            position: relative;
+        }
+
+        .center-column {
+            width: 100%;
+            max-width: 600px;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            z-index: 10;
+        }
+
+        /* SIDEBARS */
+        .sidebar {
+            background-color: rgba(255,255,255,0.6);
+            padding: 2rem;
+            border-radius: 8px;
+            border: 1px solid rgba(0,0,0,0.05);
+            color: var(--primary);
+            max-width: 600px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        
+        .sidebar-title {
+            font-family: sans-serif;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            font-weight: bold;
+            color: var(--gold);
+            margin-bottom: 1.5rem;
+            letter-spacing: 2px;
+            text-align: center;
+            border-bottom: 2px solid rgba(212, 175, 55, 0.2);
+            padding-bottom: 10px;
+        }
+
+        .sidebar-quote {
+            font-size: 0.95rem;
+            line-height: 1.8;
+            text-align: justify;
+        }
+
+        .sidebar-citation {
+            display: block;
+            margin-top: 1rem;
+            text-align: right;
+            font-size: 0.8rem;
+            font-style: italic;
+            color: var(--accent);
+            font-family: sans-serif;
+        }
+
+        /* --- DESKTOP VIEW --- */
+        @media (min-width: 1300px) {
+            .layout-wrapper {
+                display: grid;
+                grid-template-columns: 1fr 600px 1fr; 
+                align-items: start;
+                gap: 3rem; 
+            }
+            .center-column { margin: 0 auto; }
+            .sidebar {
+                position: sticky; top: 2rem; max-width: none;
+                background: transparent; border: none; padding: 0 1rem;
+            }
+            #sidebar-left { text-align: right; border-right: 1px solid rgba(0,0,0,0.1); padding-right: 2rem; }
+            #sidebar-left .sidebar-quote { text-align: right; }
+            #sidebar-right { text-align: left; border-left: 1px solid rgba(0,0,0,0.1); padding-left: 2rem; }
+            #sidebar-right .sidebar-quote { text-align: left; }
+        }
+
+        /* --- CARDS --- */
+        .card-base {
+            background: var(--card-bg);
+            border-radius: 8px;
+            box-shadow: var(--shadow);
+            overflow: hidden;
+        }
+
+        .prayer-card {
+            background: var(--card-bg);
+            border-radius: 8px;
+            box-shadow: var(--shadow);
+            padding: 2rem; text-align: center;
+            border-top: 4px solid var(--gold);
+        }
+        .prayer-meta { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; color: #888; margin-bottom: 1rem; }
+        .prayer-text { font-size: 1.25rem; line-height: 1.6; font-style: italic; margin-bottom: 1.5rem; }
+
+        button.text-btn {
+            background: none; border: none; color: var(--accent);
+            cursor: pointer; font-family: sans-serif; font-size: 0.9rem;
+            text-transform: uppercase; font-weight: bold;
+            letter-spacing: 1px; transition: opacity 0.3s;
+        }
+        button.text-btn:hover { opacity: 0.7; }
+
+        .readings-card {
+            background: var(--card-bg); border-radius: 8px; box-shadow: var(--shadow);
+            border-left: 4px solid var(--accent);
+        }
+        .readings-header {
+            padding: 1rem; cursor: pointer; display: flex; justify-content: space-between;
+            align-items: center; font-family: sans-serif; font-weight: bold;
+            text-transform: uppercase; letter-spacing: 1px; font-size: 0.9rem;
+            background: rgba(0,0,0,0.02); user-select: none;
+        }
+        .readings-header:hover { background: rgba(0,0,0,0.05); }
+        .readings-content { max-height: 0; overflow: hidden; transition: max-height 0.5s ease-out; padding: 0 1.5rem; }
+        .readings-content.open { max-height: 2000px; padding-bottom: 1.5rem; overflow-y: auto; }
+        
+        .readings-text h4 { color: var(--accent); margin-top: 2rem; margin-bottom: 0.5rem; font-family: sans-serif; text-transform: uppercase; font-size: 1rem; border-bottom: 1px solid #eee; padding-bottom: 5px; }
+        .readings-text p { line-height: 1.6; margin-bottom: 1rem; color: #333; }
+        .readings-text .verse-ref { font-size: 0.8rem; color: #888; display: block; margin-bottom: 10px; font-style: italic; }
+        .copyright-notice { font-size: 0.7rem; color: #aaa; margin-top: 2rem; text-align: center; }
+
+        .calendar-section { background: var(--card-bg); border-radius: 8px; box-shadow: var(--shadow); overflow: hidden; }
+        .calendar-header { background-color: var(--primary); color: white; padding: 1rem; text-align: center; font-family: sans-serif; text-transform: uppercase; letter-spacing: 2px; font-size: 0.9rem; }
+        .calendar-list { list-style: none; margin: 0; padding: 0; }
+        .calendar-item { display: flex; justify-content: space-between; align-items: center; padding: 1rem; border-bottom: 1px solid #eee; }
+        .calendar-item:last-child { border-bottom: none; }
+        .cal-date { font-weight: bold; font-family: sans-serif; font-size: 0.9rem; color: #555; }
+        .cal-feast { text-align: right; font-size: 0.95rem; }
+
+        .static-quote-card {
+            background-color: #f4f4f4; border-radius: 20px; padding: 1.5rem;
+            text-align: center; font-style: italic; color: #555; font-size: 1.1rem;
+            border: 1px solid rgba(0,0,0,0.05);
+        }
+
+        .parish-card {
+            background-color: #fcfbf6; border-radius: 20px; padding: 1.5rem;
+            display: flex; justify-content: space-between; align-items: center;
+            border: 1px solid var(--gold); box-shadow: 0 4px 10px rgba(0,0,0,0.05); gap: 1rem;
+        }
+        .parish-info h3 { margin: 0 0 0.5rem 0; color: var(--gold); font-family: 'Georgia', serif; font-size: 1.2rem; display: flex; align-items: center; gap: 8px; }
+        .parish-info p { margin: 0; font-size: 0.9rem; color: #666; line-height: 1.4; }
+
+        .search-btn {
+            background-color: var(--gold); color: white; border: none; padding: 0.8rem 1.5rem;
+            border-radius: 50px; font-family: sans-serif; font-weight: bold; font-size: 0.9rem;
+            cursor: pointer; white-space: nowrap; transition: transform 0.2s, opacity 0.2s;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        .search-btn:hover { transform: scale(1.05); opacity: 0.9; }
+        .loading { text-align: center; padding: 1rem; color: #888; font-style: italic; }
+
+        @media (max-width: 900px) {
+            header { padding: 2rem 1rem 1.5rem; }
+            h1 { font-size: 2.2rem; letter-spacing: 3px; }
+            .seasonal-icon { width: 90px; height: 90px; margin-bottom: 1rem; }
+            .layout-wrapper { width: min(100%, 900px); gap: 1.5rem; padding-bottom: 4rem; }
+            .center-column { max-width: 100%; }
+            .sidebar { padding: 1.5rem; }
+            .prayer-card { padding: 1.5rem; }
+            .prayer-text { font-size: 1.1rem; }
+            .readings-header { font-size: 0.85rem; }
+            .calendar-item { gap: 1rem; }
+            .static-quote-card { font-size: 1rem; }
+        }
+
+        @media (max-width: 600px) {
+            .layout-wrapper { width: 92%; }
+            .sidebar { padding: 1.25rem; }
+            .readings-content { padding: 0 1rem; }
+            .calendar-item { flex-direction: column; align-items: flex-start; }
+            .cal-feast { text-align: left; width: 100%; }
+            .text-btn { font-size: 0.85rem; }
+            .search-btn { width: 100%; padding: 0.9rem 1.25rem; }
+        }
+
+        @media (max-width: 500px) {
+            .parish-card { flex-direction: column; text-align: center; }
+            .parish-info h3 { justify-content: center; }
+            .search-btn { width: 100%; }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <!-- ICON IMAGE: Loads from local 'icons' folder -->
+        <!-- Fallback onerror ensures we default to Chirho if specific image fails -->
+        <img id="seasonal-icon" 
+             class="seasonal-icon" 
+             src="icons/chirho.png" 
+             alt="Liturgical Icon"
+             onerror="this.onerror=null; this.src='icons/chirho.png'">
+        <h1>Sanctus</h1>
+    </header>
+
+    <div class="layout-wrapper">
+        <aside class="sidebar" id="sidebar-left">
+            <div class="sidebar-title">St. Augustine</div>
+            <div id="augustine-content" class="sidebar-quote">Loading...</div>
+        </aside>
+
+        <main class="center-column">
+            <div class="prayer-card">
+                <div class="prayer-meta" id="prayer-context">Loading time context...</div>
+                <div class="prayer-text" id="prayer-display">"Lord, teach us to pray."</div>
+                <button class="text-btn" onclick="loadRandomPrayer()">Next Prayer →</button>
+            </div>
+
+            <div class="readings-card">
+                <div class="readings-header" onclick="toggleReadings()">
+                    <span>Today's Mass Readings</span>
+                    <span id="readings-toggle-icon">+</span>
+                </div>
+                <div id="readings-content" class="readings-content">
+                    <div class="loading">Loading Holy Scripture...</div>
+                </div>
+            </div>
+
+            <div class="calendar-section">
+                <div class="calendar-header">Liturgical Calendar (Next 14 Days)</div>
+                <ul class="calendar-list" id="calendar-list">
+                    <div class="loading">Loading Liturgical Data...</div>
+                </ul>
+            </div>
+
+            <div class="static-quote-card">"To pray is to light a candle in the darkness."</div>
+
+            <div class="parish-card">
+                <div class="parish-info">
+                    <h3>
+                        <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+                        Find a Parish
+                    </h3>
+                    <p>Locate the nearest Catholic church for Mass and confession.</p>
+                </div>
+                <button class="search-btn" onclick="findClosestParish()">Search Nearby</button>
+            </div>
+        </main>
+
+        <aside class="sidebar" id="sidebar-right">
+            <div class="sidebar-title">St. Thomas Aquinas</div>
+            <div id="aquinas-content" class="sidebar-quote">Loading...</div>
+        </aside>
+    </div>
+
+    <script>
+        /* --- DATABASES --- */
+        const prayerDatabase = [
+            { text: "Breathe in me, O Holy Spirit, that my thoughts may all be holy. Act in me, O Holy Spirit, that my work, too, may be holy.", type: "morning", source: "St. Augustine" },
+            { text: "Lord, open my lips, and my mouth will declare your praise.", type: "morning", source: "Psalm 51" },
+            { text: "This is the day the Lord has made; let us rejoice and be glad in it.", type: "morning", source: "Psalm 118:24" },
+            { text: "O Jesus, through the Immaculate Heart of Mary, I offer you my prayers, works, joys, and sufferings of this day.", type: "morning", source: "Morning Offering" },
+            { text: "Direct, we beg you, O Lord, our actions by your holy inspirations, that every work of ours may begin with you and by you be happily ended.", type: "morning", source: "Roman Breviary" },
+            { text: "Lord, in the morning you hear my voice; in the morning I prepare a sacrifice for you and watch.", type: "morning", source: "Psalm 5:3" },
+            { text: "Satisfy us in the morning with your steadfast love, that we may rejoice and be glad all our days.", type: "morning", source: "Psalm 90:14" },
+            { text: "Protect us, Lord, as we stay awake; watch over us as we sleep, that awake, we may keep watch with Christ, and asleep, rest in his peace.", type: "evening", source: "Liturgy of the Hours" },
+            { text: "Stay with us, Lord, for it is almost evening and the day is far spent.", type: "evening", source: "Luke 24:29" },
+            { text: "Keep watch, dear Lord, with those who work, or watch, or weep this night, and give your angels charge over those who sleep.", type: "evening", source: "St. Augustine" },
+            { text: "In peace I will lie down and sleep, for you alone, Lord, make me dwell in safety.", type: "evening", source: "Psalm 4:8" },
+            { text: "Let my prayer be set forth before you as incense, the lifting up of my hands as the evening sacrifice.", type: "evening", source: "Psalm 141:2" },
+            { text: "Into your hands, O Lord, I commend my spirit.", type: "evening", source: "Compline" },
+            { text: "Lord, make me an instrument of your peace. Where there is hatred, let me sow love.", type: "general", source: "St. Francis of Assisi" },
+            { text: "O Jesus, I surrender myself to You, take care of everything.", type: "general", source: "Surrender Novena" },
+            { text: "Jesus, I trust in You.", type: "general", source: "Divine Mercy" },
+            { text: "Christ be with me, Christ within me, Christ behind me, Christ before me, Christ beside me.", type: "general", source: "St. Patrick" },
+            { text: "Our hearts are restless, O Lord, until they rest in Thee.", type: "general", source: "St. Augustine" },
+            { text: "The Lord is my shepherd; I shall not want.", type: "general", source: "Psalm 23" },
+            { text: "Lord Jesus Christ, Son of God, have mercy on me, a sinner.", type: "general", source: "The Jesus Prayer" }
+        ];
+
+        const augustineLibrary = [
+            { text: "Late have I loved Thee, O Beauty so ancient and so new, late have I loved Thee! And behold, Thou wert within and I without, and there I sought Thee...", source: "Confessions, Book X, Chapter 27" },
+            { text: "Great art Thou, O Lord, and greatly to be praised; great is Thy power, and Thy wisdom infinite...", source: "Confessions, Book I, Chapter 1" },
+            { text: "These two cities were made by two loves: the earthly city by the love of self unto the contempt of God, and the heavenly city by the love of God unto the contempt of self...", source: "City of God, Book XIV, Chapter 28" },
+            { text: "The good man, though a slave, is free; but the wicked, though he reigns, is a slave, and not of one man alone, but of as many masters as he has vices.", source: "City of God, Book IV, Chapter 3" }
+        ];
+
+        const aquinasLibrary = [
+            { text: "Now the ultimate end of the universe must be the good of the intellect, and this is truth. Therefore truth must be the ultimate end of the whole universe...", source: "Summa Contra Gentiles, Book I, Chapter 1" },
+            { text: "It is natural to man to attain to the intellectual knowledge of sensible and individual things, because our knowledge originates from the senses...", source: "Summa Theologica, I, q. 12, a. 12" },
+            { text: "Man has a natural inclination to know the truth about God, and to live in society...", source: "Summa Theologica, I-II, q. 94, a. 2" },
+            { text: "Three things are necessary for the salvation of man: to know what he ought to believe; to know what he ought to desire; and to know what he ought to do.", source: "The Catechetical Instructions (Opuscula)" }
+        ];
+
+        /* --- LOGIC --- */
+        function loadRandomPrayer() {
+            const timeContext = new Date().getHours() < 12 ? "morning" : (new Date().getHours() >= 18 ? "evening" : "general");
+            const displayEl = document.getElementById('prayer-display');
+            const metaEl = document.getElementById('prayer-context');
+            
+            let pool = prayerDatabase.filter(p => p.type === timeContext).concat(prayerDatabase.filter(p => p.type === "general"));
+            const randomPrayer = pool[Math.floor(Math.random() * pool.length)];
+            
+            displayEl.style.opacity = 0;
+            setTimeout(() => {
+                displayEl.innerHTML = `"${randomPrayer.text}"`;
+                metaEl.innerText = `${timeContext.toUpperCase()} PRAYER • ${randomPrayer.source}`;
+                displayEl.style.opacity = 1;
+            }, 300);
+        }
+
+        function loadSaints() {
+            const aug = augustineLibrary[Math.floor(Math.random() * augustineLibrary.length)];
+            const aqu = aquinasLibrary[Math.floor(Math.random() * aquinasLibrary.length)];
+            document.getElementById('augustine-content').innerHTML = `${aug.text}<span class="sidebar-citation">— ${aug.source}</span>`;
+            document.getElementById('aquinas-content').innerHTML = `${aqu.text}<span class="sidebar-citation">— ${aqu.source}</span>`;
+        }
+
+        // Updated Theme Function to use Local Icons with Specific Logic
+        function setSeasonalTheme(color, season) {
+            const root = document.documentElement;
+            const iconEl = document.getElementById('seasonal-icon');
+            
+            // Normalize season string to lowercase if it exists
+            const s = season ? season.toLowerCase() : '';
+            
+            // Default logic
+            let iconPath = 'icons/chirho.png'; 
+
+            // 1. Set Colors based on Liturgical Color
+            switch(color) {
+                case 'purple': case 'violet':
+                    root.style.setProperty('--primary', '#4a235a'); 
+                    root.style.setProperty('--accent', '#8e44ad'); 
+                    root.style.setProperty('--gold', '#9b59b6');
+                    break;
+
+                case 'green':
+                    root.style.setProperty('--primary', '#145a32'); 
+                    root.style.setProperty('--accent', '#27ae60'); 
+                    root.style.setProperty('--gold', '#1e8449');
+                    break;
+
+                case 'red':
+                    root.style.setProperty('--primary', '#641e16'); 
+                    root.style.setProperty('--accent', '#c0392b'); 
+                    root.style.setProperty('--gold', '#e74c3c');
+                    break;
+
+                case 'white': case 'gold':
+                    root.style.setProperty('--primary', '#7f6000'); 
+                    root.style.setProperty('--accent', '#f1c40f'); 
+                    root.style.setProperty('--gold', '#d4af37');
+                    break;
+
+                default:
+                    root.style.setProperty('--primary', '#2c3e50'); 
+                    root.style.setProperty('--accent', '#c0392b'); 
+                    root.style.setProperty('--gold', '#d4af37');
+            }
+
+            const themeMeta = document.querySelector('meta[name="theme-color"]');
+            if (themeMeta) {
+                themeMeta.setAttribute('content', getComputedStyle(root).getPropertyValue('--gold').trim());
+            }
+            
+            // 2. Set Icon based on Season Rules (as requested)
+            // Nativity Color (Christmas Season or White) -> Nativity
+            if (s === 'christmas' || (s === 'advent' && color === 'white')) {
+                iconPath = 'icons/nativity.jpg';
+            } 
+            // Easter Color (Easter Season or White) -> Crucifixion (User Request)
+            else if (s === 'easter') {
+                iconPath = 'icons/christ crucified.jpg';
+            } 
+            // Ordinary Time (Green) -> Swap
+            else if (s === 'ordinary' || color === 'green') {
+                iconPath = Math.random() < 0.5 ? 'icons/chirho.png' : 'icons/pantocrator.jpg';
+            } 
+            // Lent/Passion -> Crucified
+            else if (s === 'lent' || color === 'red') {
+                iconPath = 'icons/christ crucified.jpg';
+            } 
+            // Advent (Purple) -> Default to Nativity (Preparation) or ChiRho?
+            // User: "if it is nativity color [white/gold] it should be nativity"
+            // Let's use Nativity for Advent too as it prepares for it.
+            else if (s === 'advent') {
+                iconPath = 'icons/nativity.jpg'; 
+            }
+            else {
+                // Fallback
+                iconPath = 'icons/chirho.png';
+            }
+            
+            // Set the image source
+            if(iconEl) {
+                iconEl.src = iconPath;
+                iconEl.onerror = function() { this.onerror=null; this.src='icons/chirho.png'; };
+            }
+        }
+
+        async function fetchLiturgicalCalendar() {
+            const listEl = document.getElementById('calendar-list');
+            listEl.innerHTML = '<div class="loading">Consulting the calendar...</div>';
+            
+            const today = new Date();
+            const fetchPromises = [];
+
+            // API Fetch Loop
+            for (let i = 0; i < 14; i++) {
+                const d = new Date(today);
+                d.setDate(today.getDate() + i);
+                const url = `http://calapi.inadiutorium.cz/api/v0/en/calendars/default/${d.getFullYear()}/${d.getMonth() + 1}/${d.getDate()}`;
+                
+                fetchPromises.push(
+                    fetch(url)
+                    .then(res => {
+                        if (!res.ok) throw new Error('Network error');
+                        return res.json();
+                    })
+                    .then(data => ({ status: 'fulfilled', value: { data, dateObj: d } }))
+                    .catch(error => ({ status: 'rejected', reason: error }))
+                );
+            }
+
+            try {
+                const results = await Promise.all(fetchPromises);
+                const successfulResults = results.filter(r => r.status === 'fulfilled').map(r => r.value);
+
+                if (successfulResults.length > 0) {
+                    const todayData = successfulResults[0].data;
+                    // Pass both color AND season to our theme function
+                    setSeasonalTheme(todayData.celebrations[0].colour, todayData.season);
+                    
+                    let htmlContent = '';
+                    successfulResults.forEach(item => {
+                        const cel = item.data.celebrations[0];
+                        const colorMap = { 'green': '#27ae60', 'red': '#c0392b', 'purple': '#8e44ad', 'white': '#f1c40f', 'violet': '#8e44ad' };
+                        const dateStr = item.dateObj.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+                        const colorStyle = colorMap[cel.colour] || '#555';
+
+                        htmlContent += `<li class="calendar-item"><span class="cal-date">${dateStr}</span><span class="cal-feast" style="border-right: 3px solid ${colorStyle}; padding-right: 10px;">${cel.title}</span></li>`;
+                    });
+                    listEl.innerHTML = htmlContent;
+                } else {
+                    throw new Error("API completely unreachable");
+                }
+
+            } catch (error) {
+                // OFFLINE MODE
+                console.warn("Calendar API unreachable. Switching to offline mode.");
+                setSeasonalTheme('green'); // Default to Green
+                let html = '';
+                for (let i = 0; i < 7; i++) {
+                    const d = new Date(today);
+                    d.setDate(today.getDate() + i);
+                    const dateStr = d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+                    html += `<li class="calendar-item"><span class="cal-date">${dateStr}</span><span class="cal-feast" style="border-right: 3px solid #ccc; padding-right: 10px;">Daily Office</span></li>`;
+                }
+                listEl.innerHTML = html + '<div style="text-align:center; font-size:0.8rem; margin-top:1rem; color:#888;">(Offline Mode - Internet Required)</div>';
+            }
+        }
+
+        /* --- READINGS & GEOLOCATION --- */
+        let readingsLoaded = false;
+        function toggleReadings() {
+            const content = document.getElementById('readings-content');
+            const icon = document.getElementById('readings-toggle-icon');
+            if (content.classList.contains('open')) {
+                content.classList.remove('open');
+                icon.innerHTML = "+";
+            } else {
+                content.classList.add('open');
+                icon.innerHTML = "−";
+                if (!readingsLoaded) {
+                    const script = document.createElement('script');
+                    script.src = 'https://www.universalis.com/jsonpmass.js?callback=universalisCallback';
+                    document.body.appendChild(script);
+                    readingsLoaded = true;
+                }
+            }
+        }
+        function universalisCallback(data) {
+            const el = document.getElementById('readings-content');
+            let html = '<div class="readings-text">';
+            if(data.Mass_R1) html += `<h4>First Reading</h4><div class="verse-ref">${data.Mass_R1.source}</div><p>${data.Mass_R1.text}</p>`;
+            if(data.Mass_Ps) html += `<h4>Responsorial Psalm</h4><div class="verse-ref">${data.Mass_Ps.source}</div><p>${data.Mass_Ps.text}</p>`;
+            if(data.Mass_R2) html += `<h4>Second Reading</h4><div class="verse-ref">${data.Mass_R2.source}</div><p>${data.Mass_R2.text}</p>`;
+            if(data.Mass_G) html += `<h4>Gospel</h4><div class="verse-ref">${data.Mass_G.source}</div><p>${data.Mass_G.text}</p>`;
+            el.innerHTML = html + `<div class="copyright-notice">Data courtesy of Universalis.</div></div>`;
+        }
+
+        function findClosestParish() {
+            const btn = document.querySelector('.search-btn');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = "Locating...";
+            if (!navigator.geolocation) { alert("Geolocation not supported"); btn.innerHTML = originalText; return; }
+            navigator.geolocation.getCurrentPosition(
+                (pos) => {
+                    const url = `https://www.google.com/maps/search/catholic+parish/@${pos.coords.latitude},${pos.coords.longitude},13z`;
+                    window.open(url, '_blank');
+                    btn.innerHTML = originalText;
+                }, 
+                () => { alert("Location access denied."); btn.innerHTML = originalText; }
+            );
+        }
+
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('service-worker.js').catch((error) => {
+                    console.warn('Service worker registration failed:', error);
+                });
+            });
+        }
+
+        window.onload = function() {
+            loadRandomPrayer();
+            loadSaints();
+            fetchLiturgicalCalendar();
+        };
+    </script>
+</body>
+</html>
